@@ -44,13 +44,15 @@ def generate_and_insert_mongodb(category_queries, category_name):
 
 
 def main():
-    # Definimos las fuentes y categorías
+
+    qdrant.delete_all_points()
+
     fuentes = {
         "https://www.elmundo.es/": {
             "internacional": "internacional",
             "espana": "politica",
             "deportes": "deportes",
-            # "tecnologia": "tecnologia",   # Comentado en tu versión
+            # "tecnologia": "tecnologia",
             "economia": "economia"
         },
         "https://elpais.com/": {
@@ -69,7 +71,6 @@ def main():
         }
     }
 
-    # Poblar Qdrant en bucle
     for base_url, secciones in fuentes.items():
         for path, categoria in secciones.items():
             qdrant.populate_qdrant(
@@ -78,13 +79,10 @@ def main():
                 category=categoria
             )
 
-    # Obtener los artículos más relevantes
     most_relevant = gemini.most_relevant_articles()
 
-    # Categorías a procesar
     categorias = ["internacional", "politica", "deportes", "tecnologia", "economia"]
 
-    # Procesar y guardar artículos en MongoDB
     for categoria in categorias:
         articulos = most_relevant.get(categoria, [])
         generate_and_insert_mongodb(articulos, categoria)

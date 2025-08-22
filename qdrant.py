@@ -12,7 +12,27 @@ load_dotenv()
 QDRANT_API_URL = os.environ.get('QDRANT_API_URL')
 QDRANT_API_KEY = os.environ.get('QDRANT_API_KEY')
 
-
+def delete_all_points():
+    headers = {
+        "Authorization": f"Bearer {QDRANT_API_KEY}",
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "filter": {
+            "must": []
+        }
+    }
+    
+    try:
+        response = requests.post(
+            f"{QDRANT_API_URL}/collections/articles/points/delete",
+            headers=headers,
+            json=payload
+        )
+        response.raise_for_status()
+        print("Todos los puntos han sido eliminados.")
+    except requests.RequestException as e:
+        print(f"Error al eliminar puntos en Qdrant: {e}")
 
 def get_id(text):
     return str(uuid.uuid5(uuid.NAMESPACE_URL, text))
