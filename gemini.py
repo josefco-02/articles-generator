@@ -51,8 +51,8 @@ def most_relevant_articles():
         contents=contents,
         config=generate_content_config,
     )
-    # print(response.text)
     return limpiar_y_parsear_json(response.text)
+
 
 def generate_article(texts):
     client = genai.Client(

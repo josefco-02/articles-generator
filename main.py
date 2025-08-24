@@ -16,15 +16,34 @@ client = MongoClient(MONGODB_URI)
 db = client["tfg_db"]
 articles = db["articles"]
 
+def safe_most_relevant_articles(retries=3, delay=2):
+    """
+    Llama a gemini.most_relevant_articles con reintentos en caso de fallo.
+    Si después de los reintentos no se obtiene una respuesta válida, lanza RuntimeError.
+    """
+    for attempt in range(1, retries + 1):
+        try:
+            result = gemini.most_relevant_articles()
+            if result:
+                return result
+            else:
+                print(f"Respuesta vacía o inválida en most_relevant_articles (intento {attempt}/{retries})")
+        except Exception as e:
+            print(f"Error en most_relevant_articles (intento {attempt}/{retries}): {e}")
+        time.sleep(delay)
+
+    # si llegamos aquí, todos los intentos fallaron
+    raise RuntimeError("No se ha podido obtener una respuesta válida de most_relevant_articles después de varios intentos.")
+
 def safe_generate_article(texts, retries=3, delay=2):
     """
     Llama a gemini.generate_article con reintentos en caso de error de servidor.
     """
-    for attempt in range(retries):
+    for attempt in range(1, retries + 1):
         try:
             return gemini.generate_article(texts)
         except errors.ServerError as e:
-            print(f"Error en Gemini (intento {attempt+1}/{retries}): {e}")
+            print(f"Error en Gemini (intento {attempt}/{retries}): {e}")
             time.sleep(delay)
         except Exception as e:
             print(f"Error inesperado en generate_article: {e}")
@@ -44,7 +63,7 @@ def generate_and_insert_mongodb(category_queries, category_name):
     for query in category_queries:
         response = qdrant.search_points_semantically(query)
         qdrant_data = qdrant.get_texts_and_urls(response)
-        generated_article_response = gemini.safe_generate_article(qdrant_data.get("texts", []))
+        generated_article_response = safe_generate_article(qdrant_data.get("texts", []))
 
         if not generated_article_response:
             print(f"Error al generar el artículo '{query}': No se recibió respuesta válida.")
@@ -102,7 +121,7 @@ def main():
                 category=categoria
             )
 
-    most_relevant = gemini.most_relevant_articles()
+    most_relevant = safe_most_relevant_articles()
 
     categorias = ["internacional", "politica", "deportes", "tecnologia", "economia"]
 
