@@ -1,4 +1,6 @@
 import json
+from time import time
+from google.genai import errors
 import qdrant
 import gemini
 import datetime
@@ -14,6 +16,20 @@ client = MongoClient(MONGODB_URI)
 db = client["tfg_db"]
 articles = db["articles"]
 
+def safe_generate_article(texts, retries=3, delay=2):
+    """
+    Llama a gemini.generate_article con reintentos en caso de error de servidor.
+    """
+    for attempt in range(retries):
+        try:
+            return gemini.generate_article(texts)
+        except errors.ServerError as e:
+            print(f"Error en Gemini (intento {attempt+1}/{retries}): {e}")
+            time.sleep(delay)
+        except Exception as e:
+            print(f"Error inesperado en generate_article: {e}")
+            break
+    return None
 
 def generate_and_insert_mongodb(category_queries, category_name):
     """
@@ -28,11 +44,18 @@ def generate_and_insert_mongodb(category_queries, category_name):
     for query in category_queries:
         response = qdrant.search_points_semantically(query)
         qdrant_data = qdrant.get_texts_and_urls(response)
-        generated_article_response = gemini.generate_article(qdrant_data.get("texts", []))
+        generated_article_response = gemini.safe_generate_article(qdrant_data.get("texts", []))
+
+        if not generated_article_response:
+            print(f"Error al generar el artículo '{query}': No se recibió respuesta válida.")
+            continue
+
         try:
             article_payload = json.loads(generated_article_response)
-        except json.JSONDecodeError:
+        except Exception as e:
+            print(f"Error al generar o parsear el artículo '{query}': {e}")
             continue
+
         article_payload["urls"] = qdrant_data.get("urls", [])
         article_payload["category"] = category_name
         article_payload["created_at"] = datetime.datetime.now(datetime.timezone.utc)
