@@ -1,5 +1,4 @@
 import json
-from time import time
 from google.genai import errors
 import qdrant
 import gemini
@@ -16,7 +15,7 @@ client = MongoClient(MONGODB_URI)
 db = client["tfg_db"]
 articles = db["articles"]
 
-def safe_most_relevant_articles(retries=3, delay=2):
+def safe_most_relevant_articles(retries=3):
     """
     Llama a gemini.most_relevant_articles con reintentos en caso de fallo.
     Si después de los reintentos no se obtiene una respuesta válida, lanza RuntimeError.
@@ -30,12 +29,11 @@ def safe_most_relevant_articles(retries=3, delay=2):
                 print(f"Respuesta vacía o inválida en most_relevant_articles (intento {attempt}/{retries})")
         except Exception as e:
             print(f"Error en most_relevant_articles (intento {attempt}/{retries}): {e}")
-        time.sleep(delay)
 
     # si llegamos aquí, todos los intentos fallaron
     raise RuntimeError("No se ha podido obtener una respuesta válida de most_relevant_articles después de varios intentos.")
 
-def safe_generate_article(texts, retries=3, delay=2):
+def safe_generate_article(texts, retries=3):
     """
     Llama a gemini.generate_article con reintentos en caso de error de servidor.
     """
@@ -44,7 +42,6 @@ def safe_generate_article(texts, retries=3, delay=2):
             return gemini.generate_article(texts)
         except errors.ServerError as e:
             print(f"Error en Gemini (intento {attempt}/{retries}): {e}")
-            time.sleep(delay)
         except Exception as e:
             print(f"Error inesperado en generate_article: {e}")
             break
