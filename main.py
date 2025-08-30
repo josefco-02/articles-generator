@@ -1,11 +1,13 @@
 import json
 from google.genai import errors
+import notifications
 import qdrant
 import gemini
 import datetime
 from pymongo import MongoClient
 import os
 from dotenv import load_dotenv
+
 
 load_dotenv()
 
@@ -144,6 +146,8 @@ def main():
     for categoria in categorias:
         articulos = most_relevant.get(categoria, [])
         generate_and_insert_mongodb(articulos, categoria)
+
+    notifications.send_notifications()
 
 if __name__ == "__main__":
     main()
