@@ -93,12 +93,12 @@ def main():
             "internacional": "internacional",
             "espana": "politica",
             "deportes": "deportes",
-            # "tecnologia": "tecnologia",
             "economia": "economia"
         },
         "https://elpais.com/": {
             "internacional/": "internacional",
             "espana/": "politica",
+            "sociedad/": "sociedad",
             "deportes/": "deportes",
             "tecnologia/": "tecnologia",
             "economia/": "economia"
@@ -106,9 +106,26 @@ def main():
         "https://www.lavanguardia.com/": {
             "internacional": "internacional",
             "politica": "politica",
+            "vida": "sociedad",
             "deportes": "deportes",
             "tecnologia": "tecnologia",
             "economia": "economia"
+        },
+        "https://www.abc.es/": {
+            "internacional/": "internacional",
+            "espana/": "politica",
+            "sociedad/": "sociedad",
+            "deportes/": "deportes",
+            "tecnologia/": "tecnologia",
+            "economia/": "economia"
+        },
+        "https://www.larazon.es/": {
+            "internacional/": "internacional",
+            "espana/": "politica",
+            "sociedad/": "sociedad",
+            "deportes/": "deportes",
+            "tecnologia/": "tecnologia",
+            "economia/": "economia"
         }
     }
 
@@ -122,7 +139,7 @@ def main():
 
     most_relevant = safe_most_relevant_articles()
 
-    categorias = ["economia", "tecnologia", "deportes", "politica", "internacional"]
+    categorias = ["economia", "tecnologia", "deportes", "sociedad", "politica", "internacional"]
 
     for categoria in categorias:
         articulos = most_relevant.get(categoria, [])

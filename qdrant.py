@@ -155,7 +155,7 @@ def populate_qdrant(url, language, category):
     articles_urls = scraper.get_main_article_links(url)
     print(articles_urls)
 
-    fragments = scraper.collect_fragments_from_articles(articles_urls, language=language, category=category)
+    fragments = scraper.extract_text_fragments(articles_urls, language=language, category=category)
 
     if fragments:
         print(f"Generando embeddings para {len(fragments)} fragmentos...")

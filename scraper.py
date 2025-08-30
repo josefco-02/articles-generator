@@ -5,7 +5,7 @@ from urllib.parse import urljoin, urlparse, urlunparse
 
 
 # Devuelve el texto útil completo de un artículo dada su URL
-def scrape_article_text(url, min_paragraph_len=100):
+def scrape_article_tag_text(url, min_paragraph_len=100):
     try:
         headers = {"User-Agent": "Mozilla/5.0"}
         response = requests.get(url, headers=headers, timeout=10)
@@ -33,6 +33,36 @@ def scrape_article_text(url, min_paragraph_len=100):
         print(f"Error al scrapear la URL: {e}")
         return ""
     
+def scrape_section_tag_text(url, min_paragraph_len=100):
+    try:
+        headers = {"User-Agent": "Mozilla/5.0"}
+        response = requests.get(url, headers=headers, timeout=10)
+        response.raise_for_status()
+
+        soup = BeautifulSoup(response.content, "html.parser")
+
+        # Extrae todos los <section> y sus <p>
+        sections = soup.find_all("section")
+        paragraphs = []
+        for section in sections:
+            paragraphs.extend(section.find_all("p"))
+
+        # Si no hay <section>, usa todos los <p> del documento
+        if not paragraphs:
+            paragraphs = soup.find_all("p")
+
+        # Filtra y concatena párrafos decentes
+        text = "\n".join(
+            p.get_text().strip()
+            for p in paragraphs
+            if len(p.get_text().strip()) > min_paragraph_len
+        )
+
+        return text.strip()
+
+    except Exception as e:
+        print(f"Error al scrapear la URL: {e}")
+        return ""
 
 # De momento funciona para elmundo, elpais y lavanguardia
 # Obtiene los enlaces de los artículos principales de la portada de un periódico, evitando enlaces no deseados
@@ -129,16 +159,16 @@ def split_text_into_fragments(texto, max_words=340, min_words=80):
     return fragments
 
 # Combina las funciones de scraping y fragmentación por oraciones y número de palabras para extraer fragmentos de texto de una lista de artículos
-def collect_fragments_from_articles(article_urls, language="es", category="general"):
+def extract_text_fragments(article_urls, language="es", category="general"):
     all_fragments = []
     for url in article_urls:
-        text = scrape_article_text(url)
+        if urlparse(url).netloc == "www.larazon.es":
+            text = scrape_section_tag_text(url)
+        else:
+            text = scrape_article_tag_text(url)
         if not text:
             continue
         fragments = split_text_into_fragments(text)
         for fragment in fragments:
             all_fragments.append({"text": fragment, "url": url, "language": language, "category": category})
     return all_fragments
-
-
-# print(split_text_into_fragments(scrape_article_text("https://elpais.com/internacional/2025-07-16/israel-bombardea-damasco-y-agrava-la-tension-en-oriente-proximo.html")))
