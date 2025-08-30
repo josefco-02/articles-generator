@@ -108,7 +108,7 @@ def search_points_by_vector(vector):
             f"{QDRANT_API_URL}/collections/articles/points/query",
             headers=headers,
             json={
-                "limit": 7,
+                "limit": 9,
                 "with_payload": True,
                 "query": vector
             },

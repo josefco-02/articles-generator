@@ -36,7 +36,7 @@ def scrape_article_text(url, min_paragraph_len=100):
 
 # De momento funciona para elmundo, elpais y lavanguardia
 # Obtiene los enlaces de los artículos principales de la portada de un periódico, evitando enlaces no deseados
-def get_main_article_links(base_url, max_links=14):
+def get_main_article_links(base_url, max_links=15):
     try:
         headers = {"User-Agent": "Mozilla/5.0"}
         response = requests.get(base_url, headers=headers, timeout=10)

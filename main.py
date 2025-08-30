@@ -33,13 +33,13 @@ def safe_most_relevant_articles(retries=3):
     # si llegamos aquí, todos los intentos fallaron
     raise RuntimeError("No se ha podido obtener una respuesta válida de most_relevant_articles después de varios intentos.")
 
-def safe_generate_article(texts, retries=3):
+def safe_generate_article(texts, language="español", retries=3):
     """
     Llama a gemini.generate_article con reintentos en caso de error de servidor.
     """
     for attempt in range(1, retries + 1):
         try:
-            return gemini.generate_article(texts)
+            return gemini.generate_article(texts, language)
         except errors.ServerError as e:
             print(f"Error en Gemini (intento {attempt}/{retries}): {e}")
         except Exception as e:
@@ -60,22 +60,24 @@ def generate_and_insert_mongodb(category_queries, category_name):
     for query in category_queries:
         response = qdrant.search_points_semantically(query)
         qdrant_data = qdrant.get_texts_and_urls(response)
-        generated_article_response = safe_generate_article(qdrant_data.get("texts", []))
+        languages = ["español", "inglés"]
+        for language in languages:
+            generated_article_response = safe_generate_article(qdrant_data.get("texts", []), language)
 
-        if not generated_article_response:
-            print(f"Error al generar el artículo '{query}': No se recibió respuesta válida.")
-            continue
+            if not generated_article_response:
+                print(f"Error al generar el artículo '{query}': No se recibió respuesta válida.")
+                continue
 
-        try:
-            article_payload = json.loads(generated_article_response)
-        except Exception as e:
-            print(f"Error al generar o parsear el artículo '{query}': {e}")
-            continue
+            try:
+                article_payload = json.loads(generated_article_response)
+            except Exception as e:
+                print(f"Error al generar o parsear el artículo '{query}': {e}")
+                continue
 
-        article_payload["urls"] = qdrant_data.get("urls", [])
-        article_payload["category"] = category_name
-        article_payload["created_at"] = datetime.datetime.now(datetime.timezone.utc)
-        db_data.append(article_payload)
+            article_payload["urls"] = qdrant_data.get("urls", [])
+            article_payload["category"] = category_name
+            article_payload["created_at"] = datetime.datetime.now(datetime.timezone.utc)
+            db_data.append(article_payload)
 
     if db_data:
         articles.insert_many(db_data)
@@ -120,7 +122,7 @@ def main():
 
     most_relevant = safe_most_relevant_articles()
 
-    categorias = ["internacional", "politica", "deportes", "tecnologia", "economia"]
+    categorias = ["economia", "tecnologia", "deportes", "politica", "internacional"]
 
     for categoria in categorias:
         articulos = most_relevant.get(categoria, [])
