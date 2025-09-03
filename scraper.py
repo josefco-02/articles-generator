@@ -8,7 +8,7 @@ from urllib.parse import urljoin, urlparse, urlunparse
 def scrape_article_tag_text(url, min_paragraph_len=100):
     try:
         headers = {"User-Agent": "Mozilla/5.0"}
-        response = requests.get(url, headers=headers, timeout=10)
+        response = requests.get(url, headers=headers)
         response.raise_for_status()
 
         soup = BeautifulSoup(response.content, "html.parser")
@@ -36,7 +36,7 @@ def scrape_article_tag_text(url, min_paragraph_len=100):
 def scrape_section_tag_text(url, min_paragraph_len=100):
     try:
         headers = {"User-Agent": "Mozilla/5.0"}
-        response = requests.get(url, headers=headers, timeout=10)
+        response = requests.get(url, headers=headers)
         response.raise_for_status()
 
         soup = BeautifulSoup(response.content, "html.parser")
@@ -69,7 +69,7 @@ def scrape_section_tag_text(url, min_paragraph_len=100):
 def get_main_article_links(base_url, max_links=15):
     try:
         headers = {"User-Agent": "Mozilla/5.0"}
-        response = requests.get(base_url, headers=headers, timeout=10)
+        response = requests.get(base_url, headers=headers)
         response.raise_for_status()
     except Exception as e:
         print(f"No se pudo acceder a la portada {base_url}: {e}")

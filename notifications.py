@@ -2,6 +2,7 @@ import os
 from mailersend import MailerSendClient, EmailBuilder
 from dotenv import load_dotenv
 from pymongo import MongoClient
+from datetime import datetime, timezone
 
 load_dotenv()
 
@@ -21,7 +22,13 @@ def send_notifications():
     subscribed_categories = user.get("subscribed_categories", [])
 
     if subscribed_categories:
-      matching_articles = list(articles.find({"category": {"$in": subscribed_categories}, "language": "es"}))
+      today = datetime.now(timezone.utc).date()
+      start = datetime.combine(today, datetime.min.time())
+      matching_articles = list(articles.find({
+        "category": {"$in": subscribed_categories},
+        "language": "es",
+        "created_at": {"$gte": start}
+      }))
       if matching_articles:
         mail_body = {}
         mail_from = {"email": "GenNews@test-nrw7gymdnzrg2k8e.mlsender.net", "name": "GenNews"}
