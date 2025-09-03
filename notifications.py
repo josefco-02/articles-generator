@@ -36,7 +36,7 @@ def send_notifications():
 
         html = f"<p>Hola {user.get('username')},</p><p>Aquí tienes los nuevos artículos en tus categorías suscritas:</p><ul>"
         for article in matching_articles:
-            html += f"<li><a href='https://gennews.vercel.app/{article['_id']}'>{article['title']}</a></li>"
+            html += f"<li><a href='https://gennews.vercel.app/articles/{article['_id']}'>{article['title']}</a></li>"
         html += "</ul><p>Saludos,<br>GenNews.</p>"
 
         notification_email = (EmailBuilder()
